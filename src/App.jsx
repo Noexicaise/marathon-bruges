@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Calendar, 
   Activity, 
@@ -70,47 +70,34 @@ const getWorkoutStyle = (type) => {
   }
 };
 
-
-// ... garde les autres imports intacts
-
-// ... (le reste du code avec PROFILE, ZONES, TRAINING_DATA reste identique)
-
 export default function MarathonApp() {
   const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
   
-  // 1. Initialiser l'état depuis le localStorage (s'il existe)
   const [completedDays, setCompletedDays] = useState(() => {
     const saved = localStorage.getItem('marathonCompletedDays');
-    return saved ? new Set(JSON.parse(saved)) : new Set();
+    return saved ? JSON.parse(saved) : [];
   });
   
   const [activeTab, setActiveTab] = useState('plan');
 
-  // 2. Sauvegarder dans le localStorage à chaque modification
   useEffect(() => {
-    localStorage.setItem('marathonCompletedDays', JSON.stringify([...completedDays]));
+    localStorage.setItem('marathonCompletedDays', JSON.stringify(completedDays));
   }, [completedDays]);
 
-  // ... la suite de la fonction reste identique (const currentWeek = ...)
-  
   const currentWeek = TRAINING_DATA[currentWeekIndex];
   const totalDays = 12 * 7;
-  const progressPercent = Math.round((completedDays.size / totalDays) * 100);
+  const progressPercent = Math.round((completedDays.length / totalDays) * 100);
 
   const toggleDayCompletion = (id) => {
-    setCompletedDays(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) newSet.delete(id);
-      else newSet.add(id);
-      return newSet;
-    });
+    setCompletedDays(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
   };
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 font-sans p-4 md:p-8">
       <div className="max-w-5xl mx-auto space-y-6">
         
-        {/* Header Section */}
         <header className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative z-10">
             <div>
@@ -135,7 +122,6 @@ export default function MarathonApp() {
           </div>
         </header>
 
-        {/* Zones & Reference Legend */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
           <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><Info className="w-5 h-5 text-slate-500" /> Allures & Zones de Référence</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -149,7 +135,6 @@ export default function MarathonApp() {
           </div>
         </div>
 
-        {/* Tab Switcher */}
         <div className="flex gap-2 p-1 bg-slate-900 border border-slate-800 rounded-2xl">
           <button onClick={() => setActiveTab('plan')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all ${activeTab === 'plan' ? 'bg-purple-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'}`}>
             <Calendar className="w-5 h-5" /> Programme
@@ -162,7 +147,6 @@ export default function MarathonApp() {
           </button>
         </div>
 
-        {/* Tab Content */}
         {activeTab === 'plan' && (
           <section className="space-y-4">
             <div className="flex items-center justify-between bg-slate-900 border border-slate-800 rounded-2xl p-4">
@@ -176,7 +160,7 @@ export default function MarathonApp() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {currentWeek.days.map((dayData) => {
                 const style = getWorkoutStyle(dayData.type);
-                const isDone = completedDays.has(dayData.id);
+                const isDone = completedDays.includes(dayData.id);
                 return (
                   <div key={dayData.id} className={`rounded-xl border p-4 cursor-pointer transition-all ${isDone ? 'opacity-50 border-slate-700' : `${style.bg} ${style.border}`}`} onClick={() => toggleDayCompletion(dayData.id)}>
                     <div className="flex justify-between mb-2">{style.icon} {isDone && <CheckCircle2 className="text-emerald-500 w-5 h-5" />}</div>
@@ -221,7 +205,6 @@ export default function MarathonApp() {
             ))}
           </section>
         )}
-
       </div>
     </div>
   );
