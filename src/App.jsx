@@ -70,10 +70,28 @@ const getWorkoutStyle = (type) => {
   }
 };
 
+import React, { useState, useEffect } from 'react';
+// ... garde les autres imports intacts
+
+// ... (le reste du code avec PROFILE, ZONES, TRAINING_DATA reste identique)
+
 export default function MarathonApp() {
   const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
-  const [completedDays, setCompletedDays] = useState(new Set());
-  const [activeTab, setActiveTab] = useState('plan'); 
+  
+  // 1. Initialiser l'état depuis le localStorage (s'il existe)
+  const [completedDays, setCompletedDays] = useState(() => {
+    const saved = localStorage.getItem('marathonCompletedDays');
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
+  
+  const [activeTab, setActiveTab] = useState('plan');
+
+  // 2. Sauvegarder dans le localStorage à chaque modification
+  useEffect(() => {
+    localStorage.setItem('marathonCompletedDays', JSON.stringify([...completedDays]));
+  }, [completedDays]);
+
+  // ... la suite de la fonction reste identique (const currentWeek = ...)
   
   const currentWeek = TRAINING_DATA[currentWeekIndex];
   const totalDays = 12 * 7;
