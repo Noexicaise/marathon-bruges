@@ -77,21 +77,49 @@ export default function MarathonApp() {
   const progressPercent = Math.round((completedDays.length / (12 * 7)) * 100);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 font-sans p-4">
+    <div className="min-h-screen bg-slate-950 text-slate-200 font-sans p-4 md:p-8">
       <div className="max-w-5xl mx-auto space-y-6">
-        <header className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <Trophy className="text-amber-400 w-8 h-8" /> Marathon de Bruges
-          </h1>
-          <p className="text-purple-400">Progression : {progressPercent}%</p>
-          <div className="mt-4 w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-             <div className="h-full bg-emerald-500" style={{ width: `${progressPercent}%` }}></div>
-          </div>
+        
+        {/* Ton header actuel (que tu as déjà) */}
+        <header className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+          {/* ... ton contenu header ... */}
         </header>
 
-        {/* ... (Reste de ton JSX : Tab Switcher, Grille des jours) */}
-        {/* Assure-toi d'appeler l'événement comme ceci : */}
-        {/* <div onClick={() => toggleDayCompletion(dayData.id)} ... > */}
+        {/* --- AJOUTE CES BLOCS MANQUANTS --- */}
+        
+        {/* Zones */}
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+          <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><Info className="w-5 h-5 text-slate-500" /> Allures & Zones</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            {ZONES.map((zone, i) => (
+              <div key={i} className={`p-4 rounded-xl border ${zone.bg} ${zone.border}`}>
+                <h3 className={`font-bold text-xs uppercase mb-1 ${zone.color}`}>{zone.name}</h3>
+                <p className="text-lg font-black text-white">{zone.pace}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-2 p-1 bg-slate-900 border border-slate-800 rounded-2xl">
+           <button onClick={() => setActiveTab('plan')} className={`flex-1 py-3 rounded-xl font-bold ${activeTab === 'plan' ? 'bg-purple-600' : ''}`}>Programme</button>
+           <button onClick={() => setActiveTab('summary')} className={`flex-1 py-3 rounded-xl font-bold ${activeTab === 'summary' ? 'bg-purple-600' : ''}`}>Récap</button>
+           <button onClick={() => setActiveTab('advice')} className={`flex-1 py-3 rounded-xl font-bold ${activeTab === 'advice' ? 'bg-purple-600' : ''}`}>Conseils</button>
+        </div>
+
+        {/* Contenu des onglets */}
+        {activeTab === 'plan' && (
+           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+             {currentWeek.days.map((dayData) => (
+               <div key={dayData.id} className="bg-slate-800 p-4 rounded-xl" onClick={() => toggleDayCompletion(dayData.id)}>
+                 <h3 className="font-bold">{dayData.day}: {dayData.title}</h3>
+                 <p className="text-xs">{dayData.desc}</p>
+               </div>
+             ))}
+           </div>
+        )}
+        {/* --- FIN DES BLOCS MANQUANTS --- */}
+
       </div>
     </div>
   );
