@@ -70,7 +70,7 @@ const getWorkoutStyle = (type) => {
   }
 };
 
-import React, { useState, useEffect } from 'react';
+
 // ... garde les autres imports intacts
 
 // ... (le reste du code avec PROFILE, ZONES, TRAINING_DATA reste identique)
