@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from './firebase';
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
 import { 
   Calendar, Activity, Timer, Map, CheckCircle2, Flame, HeartPulse, 
   Wind, Trophy, ChevronRight, ChevronLeft, Info, BarChart3, Dumbbell, BookOpen
@@ -61,20 +61,19 @@ export default function MarathonApp() {
   const userId = "julien_nicaise";
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const docRef = doc(db, "progression", userId);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setCompletedDays(docSnap.data().days || []);
-        }
-      } catch (e) {
-        console.error("Erreur chargement:", e);
-      }
-      setLoading(false);
-    };
-    loadData();
-  }, []);
+  const docRef = doc(db, "progression", userId);
+  
+  // onSnapshot crée une connexion permanente "temps réel"
+  const unsubscribe = onSnapshot(docRef, (docSnap) => {
+    if (docSnap.exists()) {
+      setCompletedDays(docSnap.data().days || []);
+    }
+    setLoading(false);
+  });
+
+  // Nettoyage de la connexion quand le composant est démonté
+  return () => unsubscribe();
+}, []);
 
   const toggleDayCompletion = async (id) => {
     const updatedDays = completedDays.includes(id)
