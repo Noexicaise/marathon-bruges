@@ -129,15 +129,15 @@ export default function MarathonApp() {
         {/* Zones Section */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
           <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><Info className="w-5 h-5 text-slate-500" /> Allures & Zones de Référence</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            {ZONES.map((zone, i) => (
-              <div key={i} className={`p-4 rounded-xl border ${zone.bg} ${zone.border}`}>
-                <h3 className={`font-bold text-xs uppercase mb-1 ${zone.color}`}>{zone.name}</h3>
-                <p className="text-lg font-black text-white">{zone.pace}</p>
-                <p className="text-xs text-slate-400 mt-2">{zone.hr}</p>
-              </div>
-            ))}
-          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+  {ZONES.map((zone, i) => (
+    <div key={i} className={`p-4 rounded-xl border ${zone.bg} ${zone.border}`}>
+      <h3 className={`font-bold text-xs uppercase mb-1 ${zone.color}`}>{zone.name}</h3>
+      <p className="text-lg font-black text-white">{zone.pace}</p>
+      <p className="text-xs text-slate-400 mt-2">{zone.hr}</p>
+    </div>
+  ))}
+</div>
         </div>
 
         {/* Navigation Section */}
