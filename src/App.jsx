@@ -14,6 +14,7 @@ const ZONES = [
   { name: "Allure Spécifique (AS42)", pace: "4'12\"", hr: "135-145 bpm", color: "text-violet-400", bg: "bg-violet-950/30", border: "border-violet-600" },
   { name: "Seuil +", pace: "3'55\" - 4'05\"", hr: "148-155 bpm", color: "text-amber-400", bg: "bg-amber-950/30", border: "border-amber-600" },
   { name: "VMA / Vitesse", pace: "3'15\" - 3'30\"", hr: "Max", color: "text-rose-400", bg: "bg-rose-950/30", border: "border-rose-600" }
+  { name: "Sortie Longue (SL)", pace: "Varie", hr: "120-130 bpm", color: "text-slate-200", bg: "bg-slate-800", border: "border-slate-500" }
 ];
 
 const TRAINING_DATA = [
@@ -40,14 +41,14 @@ const ADVICE_CONTENT = [
 
 const getWorkoutStyle = (type) => {
   switch(type) {
-    case 'Repos': return { bg: 'bg-slate-800', border: 'border-slate-700', text: 'text-slate-400', icon: <HeartPulse className="w-5 h-5" /> };
+    case 'Repos': return { bg: 'bg-slate-900', border: 'border-slate-800', text: 'text-slate-400', icon: <HeartPulse className="w-5 h-5" /> };
     case 'EF': return { bg: 'bg-emerald-950/30', border: 'border-emerald-600', text: 'text-emerald-400', icon: <Wind className="w-5 h-5" /> };
     case 'EA': return { bg: 'bg-sky-950/30', border: 'border-sky-600', text: 'text-sky-400', icon: <Activity className="w-5 h-5" /> };
     case 'AS42': return { bg: 'bg-violet-950/30', border: 'border-violet-600', text: 'text-violet-400', icon: <Map className="w-5 h-5" /> };
     case 'Seuil': return { bg: 'bg-amber-950/30', border: 'border-amber-600', text: 'text-amber-400', icon: <Flame className="w-5 h-5" /> };
     case 'VMA': return { bg: 'bg-rose-950/30', border: 'border-rose-600', text: 'text-rose-400', icon: <Flame className="w-5 h-5" /> };
-    // Modification ici pour la Sortie Longue :
-    case 'SL': return { bg: 'bg-rose-950/30', border: 'border-rose-600', text: 'text-rose-400', icon: <Timer className="w-5 h-5" /> };
+    // NOUVEAU STYLE SL :
+    case 'SL': return { bg: 'bg-slate-800', border: 'border-slate-500', text: 'text-slate-200', icon: <Timer className="w-5 h-5" /> };
     case 'RACE': return { bg: 'bg-gradient-to-r from-orange-600 to-amber-500', border: 'border-orange-400', text: 'text-white', icon: <Trophy className="w-6 h-6 animate-pulse" /> };
     default: return { bg: 'bg-slate-800', border: 'border-slate-700', text: 'text-slate-400', icon: <Activity className="w-5 h-5" /> };
   }
