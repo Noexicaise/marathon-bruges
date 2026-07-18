@@ -3,7 +3,8 @@ import { db } from './firebase';
 import { doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
 import { 
   Calendar, Activity, Timer, Map, CheckCircle2, Flame, HeartPulse, 
-  Wind, Trophy, ChevronRight, ChevronLeft, Info, BarChart3, Dumbbell, BookOpen
+  Wind, Trophy, ChevronRight, ChevronLeft, Info, BarChart3, Dumbbell, BookOpen,
+  Printer, Bell
 } from 'lucide-react';
 
 const PROFILE = { age: 46, vo2max: 70, fcRepos: "35-36", imc: 21, goal: "2h57", paceGoal: "4'12\"/km" };
@@ -129,6 +130,62 @@ const getWorkoutStyle = (type) => {
   }
 };
 
+// NB : le plan ne traverse pas de changement d'année (Juil->Oct 2026).
+// Si tu réutilises ce plan une autre année, ajuste PLAN_YEAR.
+const PLAN_YEAR = 2026;
+const DAY_ORDER = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
+
+const parseStartDate = (datesStr) => {
+  const [startStr] = datesStr.split(" au ");
+  const [day, month] = startStr.split("/").map(Number);
+  return new Date(PLAN_YEAR, month - 1, day);
+};
+
+const getDateForDay = (week, dayName) => {
+  const start = parseStartDate(week.dates);
+  const offset = DAY_ORDER.indexOf(dayName);
+  const d = new Date(start);
+  d.setDate(d.getDate() + offset);
+  return d;
+};
+
+const isSameDay = (a, b) =>
+  a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+
+const RACE_DATE = getDateForDay(TRAINING_DATA[TRAINING_DATA.length - 1], "Dimanche");
+
+const getDaysUntilRace = () => {
+  const today = new Date();
+  const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  return Math.round((RACE_DATE - todayMidnight) / (1000 * 60 * 60 * 24));
+};
+
+const findTodaySession = () => {
+  const today = new Date();
+  for (const week of TRAINING_DATA) {
+    for (const day of week.days) {
+      if (isSameDay(getDateForDay(week, day.day), today)) {
+        return { week, day };
+      }
+    }
+  }
+  return null;
+};
+
+const weeklyKmPerRunDay = (week) => {
+  const runDays = week.days.filter((d) => d.type !== "Repos");
+  return runDays.length ? week.volume_km / runDays.length : 0;
+};
+
+const TOTAL_PLANNED_KM = TRAINING_DATA.reduce((sum, w) => sum + w.volume_km, 0);
+
+const getCompletedKm = (completedDays) =>
+  TRAINING_DATA.reduce((sum, week) => {
+    const perDay = weeklyKmPerRunDay(week);
+    const doneRunDays = week.days.filter((d) => d.type !== "Repos" && completedDays.includes(d.id)).length;
+    return sum + doneRunDays * perDay;
+  }, 0);
+
 export default function MarathonApp() {
   const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
   const [completedDays, setCompletedDays] = useState([]);
@@ -169,24 +226,53 @@ export default function MarathonApp() {
     return <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">Chargement...</div>;
   }
 
+  useEffect(() => {
+    if (typeof Notification === "undefined") return;
+    const session = findTodaySession();
+    if (!session || session.day.type === "Repos") return;
+    const todayKey = new Date().toISOString().slice(0, 10);
+    const notifiedKey = `notif_${todayKey}`;
+    if (localStorage.getItem(notifiedKey)) return;
+
+    const fireNotification = () => {
+      new Notification(`Séance du jour : ${session.day.title}`, { body: session.day.desc });
+      localStorage.setItem(notifiedKey, "1");
+    };
+
+    if (Notification.permission === "granted") {
+      fireNotification();
+    } else if (Notification.permission !== "denied") {
+      Notification.requestPermission().then((perm) => {
+        if (perm === "granted") fireNotification();
+      });
+    }
+  }, []);
+
   const currentWeek = TRAINING_DATA[currentWeekIndex];
   const progressPercent = Math.round((completedDays.length / (12 * 7)) * 100);
+  const completedKm = Math.round(getCompletedKm(completedDays) * 10) / 10;
+  const kmPercent = Math.min(100, Math.round((completedKm / TOTAL_PLANNED_KM) * 100));
+  const daysUntilRace = getDaysUntilRace();
+  const todaySession = findTodaySession();
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 font-sans p-4 md:p-8">
       <div className="max-w-5xl mx-auto space-y-6">
         
         {/* Header Section */}
-        <header className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+        <header className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden print:bg-white print:text-black print:border-slate-300">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative z-10">
             <div>
-              <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white mb-2 flex items-center gap-3">
+              <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white mb-2 flex items-center gap-3 print:text-black">
                 <Trophy className="text-amber-400 w-8 h-8" />
                 Marathon de Bruges
               </h1>
-              <p className="text-purple-400 font-semibold text-lg">Objectif Sub 3h (Allure {PROFILE.paceGoal})</p>
+              <p className="text-purple-400 font-semibold text-lg print:text-black">Objectif Sub 3h (Allure {PROFILE.paceGoal})</p>
+              <p className="text-amber-400 font-bold text-sm mt-1">
+                {daysUntilRace > 0 ? `J-${daysUntilRace} avant le départ` : daysUntilRace === 0 ? "C'est aujourd'hui — bon courage !" : "Marathon passé"}
+              </p>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm bg-slate-950/50 p-4 rounded-xl border border-slate-800">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm bg-slate-950/50 p-4 rounded-xl border border-slate-800 print:hidden">
               <div className="flex flex-col"><span className="text-slate-500">VO2Max</span><span className="font-bold text-white text-lg">{PROFILE.vo2max}</span></div>
               <div className="flex flex-col"><span className="text-slate-500">FC Repos</span><span className="font-bold text-white text-lg">{PROFILE.fcRepos}</span></div>
               <div className="flex flex-col"><span className="text-slate-500">IMC</span><span className="font-bold text-white text-lg">{PROFILE.imc}</span></div>
@@ -194,15 +280,33 @@ export default function MarathonApp() {
                 <span className="text-slate-500">Progression</span>
                 <span className="font-bold text-emerald-400 text-lg">{progressPercent}%</span>
               </div>
+              <div className="flex flex-col">
+                <span className="text-slate-500">Km parcourus</span>
+                <span className="font-bold text-sky-400 text-lg">{completedKm} / {TOTAL_PLANNED_KM}</span>
+              </div>
             </div>
           </div>
-          <div className="mt-6 w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+          <div className="mt-6 w-full bg-slate-800 h-2 rounded-full overflow-hidden print:hidden">
              <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: `${progressPercent}%` }}></div>
+          </div>
+          <div className="mt-2 w-full bg-slate-800 h-2 rounded-full overflow-hidden print:hidden">
+             <div className="h-full bg-sky-500 transition-all duration-500" style={{ width: `${kmPercent}%` }}></div>
           </div>
         </header>
 
+        {/* Today's session reminder */}
+        {todaySession && todaySession.day.type !== "Repos" && !completedDays.includes(todaySession.day.id) && (
+          <div className="bg-purple-600/20 border border-purple-500 rounded-2xl p-4 flex items-center gap-3 print:hidden">
+            <Bell className="w-5 h-5 text-purple-300 shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm text-purple-200 font-semibold">Séance d'aujourd'hui : {todaySession.day.title}</p>
+              <p className="text-xs text-slate-400">{todaySession.day.desc}</p>
+            </div>
+          </div>
+        )}
+
         {/* Zones Section */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 print:hidden">
           <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><Info className="w-5 h-5 text-slate-500" /> Allures & Zones de Référence</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
   {ZONES.map((zone, i) => (
@@ -216,7 +320,7 @@ export default function MarathonApp() {
         </div>
 
         {/* Shoes Section */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 print:hidden">
           <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
             <ShoeIcon className="w-5 h-5 text-slate-500" /> Mes Chaussures
           </h2>
@@ -243,7 +347,7 @@ export default function MarathonApp() {
         </div>
 
         {/* Navigation Section */}
-        <div className="flex gap-2 p-1 bg-slate-900 border border-slate-800 rounded-2xl">
+        <div className="flex gap-2 p-1 bg-slate-900 border border-slate-800 rounded-2xl print:hidden">
           <button onClick={() => setActiveTab('plan')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all ${activeTab === 'plan' ? 'bg-purple-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'}`}>
             <Calendar className="w-5 h-5" /> Programme
           </button>
@@ -253,18 +357,21 @@ export default function MarathonApp() {
           <button onClick={() => setActiveTab('advice')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all ${activeTab === 'advice' ? 'bg-purple-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'}`}>
             <BookOpen className="w-5 h-5" /> Conseils
           </button>
+          <button onClick={() => window.print()} title="Imprimer / Exporter en PDF" className="px-4 flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all text-slate-400 hover:bg-slate-800">
+            <Printer className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Tabs Content */}
         {activeTab === 'plan' && (
           <section className="space-y-4">
-            <div className="flex items-center justify-between bg-slate-900 border border-slate-800 rounded-2xl p-4">
-              <button onClick={() => setCurrentWeekIndex(p => Math.max(0, p-1))} disabled={currentWeekIndex === 0} className="p-2 rounded-lg hover:bg-slate-800 disabled:opacity-30"><ChevronLeft className="w-6 h-6" /></button>
+            <div className="flex items-center justify-between bg-slate-900 border border-slate-800 rounded-2xl p-4 print:bg-white print:text-black print:border-slate-300">
+              <button onClick={() => setCurrentWeekIndex(p => Math.max(0, p-1))} disabled={currentWeekIndex === 0} className="p-2 rounded-lg hover:bg-slate-800 disabled:opacity-30 print:hidden"><ChevronLeft className="w-6 h-6" /></button>
               <div className="text-center">
-                <h2 className="text-xl md:text-2xl font-black text-white">Semaine {currentWeek.week}</h2>
-                <div className="text-sm text-slate-400">{currentWeek.dates} | {currentWeek.volume_km} km</div>
+                <h2 className="text-xl md:text-2xl font-black text-white print:text-black">Semaine {currentWeek.week}</h2>
+                <div className="text-sm text-slate-400 print:text-slate-600">{currentWeek.dates} | {currentWeek.volume_km} km</div>
               </div>
-              <button onClick={() => setCurrentWeekIndex(p => Math.min(11, p+1))} disabled={currentWeekIndex === 11} className="p-2 rounded-lg hover:bg-slate-800 disabled:opacity-30"><ChevronRight className="w-6 h-6" /></button>
+              <button onClick={() => setCurrentWeekIndex(p => Math.min(11, p+1))} disabled={currentWeekIndex === 11} className="p-2 rounded-lg hover:bg-slate-800 disabled:opacity-30 print:hidden"><ChevronRight className="w-6 h-6" /></button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {currentWeek.days.map((dayData) => {
@@ -272,7 +379,7 @@ export default function MarathonApp() {
                 const shoe = getShoeForType(dayData.type, currentWeek.week);
                 const isDone = completedDays.includes(dayData.id);
                 return (
-                  <div key={dayData.id} className={`rounded-xl border p-4 cursor-pointer transition-all ${isDone ? 'opacity-50 border-slate-700' : `${style.bg} ${style.border}`}`} onClick={() => toggleDayCompletion(dayData.id)}>
+                  <div key={dayData.id} className={`rounded-xl border p-4 cursor-pointer transition-all print:bg-white print:text-black print:border-slate-300 print:break-inside-avoid ${isDone ? 'opacity-50 border-slate-700' : `${style.bg} ${style.border}`}`} onClick={() => toggleDayCompletion(dayData.id)}>
                     <div className="flex justify-between mb-2">{style.icon} {isDone && <CheckCircle2 className="text-emerald-500 w-5 h-5" />}</div>
                     <h3 className="font-bold text-white text-sm">{dayData.day}: {dayData.title}</h3>
                     <p className="text-xs text-slate-400 mt-2 line-clamp-2">{dayData.desc}</p>
