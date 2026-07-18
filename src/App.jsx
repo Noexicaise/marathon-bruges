@@ -32,6 +32,70 @@ const TRAINING_DATA = [
   { week: 12, dates: "05/10 au 11/10", volume_km: 15, block: "Bloc 4 : Semaine de la Course", days: [{ id: "w12-d1", day: "Lundi", type: "Repos", title: "Repos complet", desc: "Repos total." }, { id: "w12-d2", day: "Mardi", type: "EF", title: "Réveil musculaire", desc: "8 km EF (5'15\"/km) + 3 lignes droites de 100m relâchées." }, { id: "w12-d3", day: "Mercredi", type: "Repos", title: "Repos complet", desc: "Repos total." }, { id: "w12-d4", day: "AS42", title: "Rappel T. Court", desc: "5 km EF dont 1500m à 4'12\"/km pour mémoriser la foulée." }, { id: "w12-d5", day: "Vendredi", type: "Repos", title: "Recharge Glucidique", desc: "Repos complet. Début recharge glucidique, eau et sel." }, { id: "w12-d6", day: "Samedi", type: "EF", title: "Déblocage", desc: "15-20 min footing ultra-lent (2-3 km) + étirements légers." }, { id: "w12-d7", day: "RACE", title: "MARATHON DE BRUGES", desc: "Objectif SUB 3H (4'12\"/km constants). Let's go!" }] }
 ];
 
+const ShoeIcon = ({ className = "w-5 h-5" }) => (
+  <svg viewBox="0 0 64 40" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path
+      d="M3 30c0-3.5 2.2-5.5 5.5-6.8l12.5-4.7c2.2-5.8 6.8-10.3 12.4-12.2l6.7-2.3c2.6-.9 5.4.1 6.9 2.4l4 6c1.5 2.2 4 3.5 6.6 3.5h1.4c1.7 0 3 1.3 3 3v5.3c0 3.8-3.1 6.8-6.8 6.8H9.5C5.9 31 3 32 3 30z"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinejoin="round"
+      strokeLinecap="round"
+    />
+    <path d="M3 30h56" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+    <path d="M21 18.5l3.2 6.5M29 15l2.8 7M37 11.5l2.6 7.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);
+
+const SHOES = {
+  wave_rider: {
+    name: "Mizuno Wave Rider 29",
+    short: "Wave Rider 29",
+    text: "text-cyan-300",
+    bg: "bg-cyan-950/40",
+    border: "border-cyan-700",
+    solid: "bg-cyan-500",
+  },
+  neo_vista: {
+    name: "Mizuno Neo Vista",
+    short: "Neo Vista",
+    text: "text-fuchsia-300",
+    bg: "bg-fuchsia-950/40",
+    border: "border-fuchsia-700",
+    solid: "bg-fuchsia-500",
+  },
+  endorphine: {
+    name: "Saucony Endorphine Pro 4",
+    short: "Endorphine Pro 4",
+    text: "text-orange-300",
+    bg: "bg-orange-950/40",
+    border: "border-orange-700",
+    solid: "bg-orange-500",
+  },
+};
+
+const getShoeForType = (type) => {
+  switch (type) {
+    case "EF":
+    case "SL":
+      return SHOES.wave_rider;
+    case "EA":
+      return SHOES.neo_vista;
+    case "VMA":
+    case "Seuil":
+    case "AS42":
+    case "RACE":
+      return SHOES.endorphine;
+    default:
+      return null;
+  }
+};
+
+const SHOE_LEGEND = [
+  { ...SHOES.wave_rider, usage: "Endurance Fondamentale & Sorties Longues", types: ["EF", "SL"] },
+  { ...SHOES.neo_vista, usage: "Endurance Active & séances dynamiques", types: ["EA"] },
+  { ...SHOES.endorphine, usage: "Fractionné, Seuil, Allure Marathon & Jour J", types: ["VMA", "Seuil", "AS42", "RACE"] },
+];
+
 const ADVICE_CONTENT = [
   { title: "Nutrition", icon: <Flame className="w-6 h-6 text-orange-400" />, content: "Focus sur la recharge glucidique les 72h avant. Testez vos gels/boissons à l'effort durant les sorties longues. Hydratation : 500ml/heure min." },
   { title: "Récupération", icon: <HeartPulse className="w-6 h-6 text-red-400" />, content: "Le sommeil est votre arme n°1. Si possible, siestes de 20min. Utilisez le froid (douches froides) en période de gros volume pour réduire l'inflammation." },
@@ -140,6 +204,33 @@ export default function MarathonApp() {
 </div>
         </div>
 
+        {/* Shoes Section */}
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+          <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <ShoeIcon className="w-5 h-5 text-slate-500" /> Mes Chaussures
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {SHOE_LEGEND.map((shoe, i) => (
+              <div key={i} className={`p-4 rounded-xl border ${shoe.bg} ${shoe.border} flex flex-col gap-3`}>
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg ${shoe.solid}/20`}>
+                    <ShoeIcon className={`w-7 h-7 ${shoe.text}`} />
+                  </div>
+                  <h3 className="font-bold text-sm text-white leading-tight">{shoe.name}</h3>
+                </div>
+                <p className="text-xs text-slate-400">{shoe.usage}</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {shoe.types.map((t) => (
+                    <span key={t} className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${shoe.solid}/20 ${shoe.text}`}>
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Navigation Section */}
         <div className="flex gap-2 p-1 bg-slate-900 border border-slate-800 rounded-2xl">
           <button onClick={() => setActiveTab('plan')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all ${activeTab === 'plan' ? 'bg-purple-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'}`}>
@@ -167,12 +258,19 @@ export default function MarathonApp() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {currentWeek.days.map((dayData) => {
                 const style = getWorkoutStyle(dayData.type);
+                const shoe = getShoeForType(dayData.type);
                 const isDone = completedDays.includes(dayData.id);
                 return (
                   <div key={dayData.id} className={`rounded-xl border p-4 cursor-pointer transition-all ${isDone ? 'opacity-50 border-slate-700' : `${style.bg} ${style.border}`}`} onClick={() => toggleDayCompletion(dayData.id)}>
                     <div className="flex justify-between mb-2">{style.icon} {isDone && <CheckCircle2 className="text-emerald-500 w-5 h-5" />}</div>
                     <h3 className="font-bold text-white text-sm">{dayData.day}: {dayData.title}</h3>
                     <p className="text-xs text-slate-400 mt-2 line-clamp-2">{dayData.desc}</p>
+                    {shoe && (
+                      <div className={`mt-3 flex items-center gap-1.5 px-2 py-1 rounded-lg border ${shoe.bg} ${shoe.border} w-fit`}>
+                        <ShoeIcon className={`w-4 h-4 ${shoe.text}`} />
+                        <span className={`text-[10px] font-bold ${shoe.text}`}>{shoe.short}</span>
+                      </div>
+                    )}
                   </div>
                 );
               })}
