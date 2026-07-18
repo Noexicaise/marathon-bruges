@@ -64,27 +64,37 @@ const SHOES = {
     solid: "bg-fuchsia-500",
   },
   endorphine: {
-    name: "Saucony Endorphine Pro 4",
-    short: "Endorphine Pro 4",
+    name: "Saucony Endorphin Pro 4",
+    short: "Endorphin Pro 4",
     text: "text-orange-300",
     bg: "bg-orange-950/40",
     border: "border-orange-700",
     solid: "bg-orange-500",
   },
+  endorphine_new: {
+    name: "Saucony Endorphin Pro 4 (neuve)",
+    short: "Endorphin Pro 4 (neuve)",
+    text: "text-amber-200",
+    bg: "bg-amber-900/40",
+    border: "border-amber-500",
+    solid: "bg-amber-400",
+  },
 };
 
-const getShoeForType = (type) => {
+const NEW_PAIR_FROM_WEEK = 11;
+
+const getShoeForType = (type, week) => {
   switch (type) {
     case "EF":
     case "SL":
       return SHOES.wave_rider;
     case "EA":
-      return SHOES.neo_vista;
     case "VMA":
     case "Seuil":
+      return SHOES.neo_vista;
     case "AS42":
     case "RACE":
-      return SHOES.endorphine;
+      return week >= NEW_PAIR_FROM_WEEK ? SHOES.endorphine_new : SHOES.endorphine;
     default:
       return null;
   }
@@ -92,8 +102,9 @@ const getShoeForType = (type) => {
 
 const SHOE_LEGEND = [
   { ...SHOES.wave_rider, usage: "Endurance Fondamentale & Sorties Longues", types: ["EF", "SL"] },
-  { ...SHOES.neo_vista, usage: "Endurance Active & séances dynamiques", types: ["EA"] },
-  { ...SHOES.endorphine, usage: "Fractionné, Seuil, Allure Marathon & Jour J", types: ["VMA", "Seuil", "AS42", "RACE"] },
+  { ...SHOES.neo_vista, usage: "Endurance Active, VMA & Seuil", types: ["EA", "VMA", "Seuil"] },
+  { ...SHOES.endorphine, usage: `Allure Marathon (AS42) — Semaines 1 à ${NEW_PAIR_FROM_WEEK - 1}`, types: ["AS42"] },
+  { ...SHOES.endorphine_new, usage: `Rodage puis Jour J — à partir de la Semaine ${NEW_PAIR_FROM_WEEK}`, types: ["AS42", "RACE"] },
 ];
 
 const ADVICE_CONTENT = [
@@ -258,7 +269,7 @@ export default function MarathonApp() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {currentWeek.days.map((dayData) => {
                 const style = getWorkoutStyle(dayData.type);
-                const shoe = getShoeForType(dayData.type);
+                const shoe = getShoeForType(dayData.type, currentWeek.week);
                 const isDone = completedDays.includes(dayData.id);
                 return (
                   <div key={dayData.id} className={`rounded-xl border p-4 cursor-pointer transition-all ${isDone ? 'opacity-50 border-slate-700' : `${style.bg} ${style.border}`}`} onClick={() => toggleDayCompletion(dayData.id)}>
