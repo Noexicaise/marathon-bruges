@@ -220,7 +220,7 @@ export default function MarathonApp() {
           <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
             <ShoeIcon className="w-5 h-5 text-slate-500" /> Mes Chaussures
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
             {SHOE_LEGEND.map((shoe, i) => (
               <div key={i} className={`p-4 rounded-xl border ${shoe.bg} ${shoe.border} flex flex-col gap-3`}>
                 <div className="flex items-center gap-3">
