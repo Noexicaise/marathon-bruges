@@ -30,7 +30,7 @@ const TRAINING_DATA = [
   { week: 9, dates: "14/09 au 20/09", volume_km: 85, block: "Bloc 3 : Assimilation et Optimisation", days: [{ id: "w9-d1", day: "Lundi", type: "Repos", title: "Repos complet", desc: "Repos total." }, { id: "w9-d2", day: "Mardi", type: "Seuil", title: "Seuil Anaérobie", desc: "3 km EF + 4x 2000m (3'55\"/km), récup 3' EF + 2 km EF." }, { id: "w9-d3", day: "Mercredi", type: "EA", title: "Endurance Active", desc: "16 km en EA à 4'50\"/km." }, { id: "w9-d4", day: "Jeudi", type: "Repos", title: "Repos complet", desc: "Repos total." }, { id: "w9-d5", day: "Vendredi", type: "AS42", title: "Gros Bloc AS42", desc: "3 km EF + 12 km continus à 4'12\"/km. Valider la facilité (<142 bpm)." }, { id: "w9-d6", day: "Samedi", type: "EF", title: "Récupération", desc: "8 km très lent." }, { id: "w9-d7", day: "Dimanche", type: "SL", title: "Dernière Très Longue", desc: "30 km : 20 km à 5'05\"/km + 8 km à 4'12\"/km + 2 km EF." }] },
   { week: 10, dates: "21/09 au 27/09", volume_km: 65, block: "Bloc 3 : Début de l'affûtage (T-3)", days: [{ id: "w10-d1", day: "Lundi", type: "Repos", title: "Repos complet", desc: "Repos total." }, { id: "w10-d2", day: "Mardi", type: "VMA", title: "Entretien VMA", desc: "3 km EF + 8x 400m (3'25\"/km), récup 1'15\" trot + 2 km EF." }, { id: "w10-d3", day: "Mercredi", type: "EF", title: "Endurance F.", desc: "12 km en EF pure (5'15\"/km)." }, { id: "w10-d4", day: "Jeudi", type: "Repos", title: "Repos complet", desc: "Repos total." }, { id: "w10-d5", day: "Vendredi", type: "AS42", title: "Rappel AS42", desc: "3 km EF + 3x 3000m à 4'12\"/km, récup 1000m à 5'05\"/km." }, { id: "w10-d6", day: "Samedi", type: "Repos", title: "Repos complet", desc: "Repos total." }, { id: "w10-d7", day: "Dimanche", type: "SL", title: "Sortie Longue Réduite", desc: "18 km linéaires à 4'55\"/km. Sensation de facilité absolue." }] },
   { week: 11, dates: "28/09 au 04/10", volume_km: 45, block: "Bloc 4 : Affûtage (J-14)", days: [{ id: "w11-d1", day: "Lundi", type: "Repos", title: "Repos complet", desc: "Repos total." }, { id: "w11-d2", day: "Mardi", type: "Seuil", title: "Seuil léger", desc: "3 km EF + 3x 1500m (3'58\"/km), récup 2'30\" EF + 2 km EF." }, { id: "w11-d3", day: "Mercredi", type: "EF", title: "Régénération", desc: "10 km en EF pure (5'20\"/km)." }, { id: "w11-d4", day: "Jeudi", type: "Repos", title: "Repos complet", desc: "Repos total." }, { id: "w11-d5", day: "Vendredi", type: "AS42", title: "Rappel Allure Court", desc: "3 km EF + 4000m à 4'12\"/km + 2 km EF." }, { id: "w11-d6", day: "Samedi", type: "Repos", title: "Repos complet", desc: "Repos total." }, { id: "w11-d7", day: "Dimanche", type: "EF", title: "Sortie Confiance", desc: "12 km dont 3 km à 4'12\"/km au milieu. Reste très souple." }] },
-  { week: 12, dates: "05/10 au 11/10", volume_km: 15, block: "Bloc 4 : Semaine de la Course", days: [{ id: "w12-d1", day: "Lundi", type: "Repos", title: "Repos complet", desc: "Repos total." }, { id: "w12-d2", day: "Mardi", type: "EF", title: "Réveil musculaire", desc: "8 km EF (5'15\"/km) + 3 lignes droites de 100m relâchées." }, { id: "w12-d3", day: "Mercredi", type: "Repos", title: "Repos complet", desc: "Repos total." }, { id: "w12-d4", day: "AS42", title: "Rappel T. Court", desc: "5 km EF dont 1500m à 4'12\"/km pour mémoriser la foulée." }, { id: "w12-d5", day: "Vendredi", type: "Repos", title: "Recharge Glucidique", desc: "Repos complet. Début recharge glucidique, eau et sel." }, { id: "w12-d6", day: "Samedi", type: "EF", title: "Déblocage", desc: "15-20 min footing ultra-lent (2-3 km) + étirements légers." }, { id: "w12-d7", day: "RACE", title: "MARATHON DE BRUGES", desc: "Objectif SUB 3H (4'12\"/km constants). Let's go!" }] }
+  { week: 12, dates: "05/10 au 11/10", volume_km: 15, block: "Bloc 4 : Semaine de la Course", days: [{ id: "w12-d1", day: "Lundi", type: "Repos", title: "Repos complet", desc: "Repos total." }, { id: "w12-d2", day: "Mardi", type: "EF", title: "Réveil musculaire", desc: "8 km EF (5'15\"/km) + 3 lignes droites de 100m relâchées." }, { id: "w12-d3", day: "Mercredi", type: "Repos", title: "Repos complet", desc: "Repos total." }, { id: "w12-d4", day: "Jeudi", type: "AS42", title: "Rappel T. Court", desc: "5 km EF dont 1500m à 4'12\"/km pour mémoriser la foulée." }, { id: "w12-d5", day: "Vendredi", type: "Repos", title: "Recharge Glucidique", desc: "Repos complet. Début recharge glucidique, eau et sel." }, { id: "w12-d6", day: "Samedi", type: "EF", title: "Déblocage", desc: "15-20 min footing ultra-lent (2-3 km) + étirements légers." }, { id: "w12-d7", day: "RACE", title: "MARATHON DE BRUGES", desc: "Objectif SUB 3H (4'12\"/km constants). Let's go!" }] }
 ];
 
 const ShoeIcon = ({ className = "w-5 h-5" }) => (
@@ -222,10 +222,6 @@ export default function MarathonApp() {
     }
   };
 
-  if (loading) {
-    return <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">Chargement...</div>;
-  }
-
   useEffect(() => {
     if (typeof Notification === "undefined") return;
     const session = findTodaySession();
@@ -247,6 +243,10 @@ export default function MarathonApp() {
       });
     }
   }, []);
+
+  if (loading) {
+    return <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">Chargement...</div>;
+  }
 
   const currentWeek = TRAINING_DATA[currentWeekIndex];
   const progressPercent = Math.round((completedDays.length / (12 * 7)) * 100);
