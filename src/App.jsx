@@ -382,7 +382,7 @@ export default function MarathonApp() {
                   <div key={dayData.id} className={`rounded-xl border p-4 cursor-pointer transition-all print:bg-white print:text-black print:border-slate-300 print:break-inside-avoid ${isDone ? 'opacity-50 border-slate-700' : `${style.bg} ${style.border}`}`} onClick={() => toggleDayCompletion(dayData.id)}>
                     <div className="flex justify-between mb-2">{style.icon} {isDone && <CheckCircle2 className="text-emerald-500 w-5 h-5" />}</div>
                     <h3 className="font-bold text-white text-sm">{dayData.day}: {dayData.title}</h3>
-                    <p className="text-xs text-slate-400 mt-2 line-clamp-2">{dayData.desc}</p>
+                    <p className="text-xs text-slate-400 mt-2">{dayData.desc}</p>
                     {shoe && (
                       <div className={`mt-3 flex items-center gap-1.5 px-2 py-1 rounded-lg border ${shoe.bg} ${shoe.border} w-fit`}>
                         <ShoeIcon className={`w-4 h-4 ${shoe.text}`} />
