@@ -4,7 +4,7 @@ import { doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
 import { 
   Calendar, Activity, Timer, Map, CheckCircle2, Flame, HeartPulse, 
   Wind, Trophy, ChevronRight, ChevronLeft, Info, BarChart3, Dumbbell, BookOpen,
-  Printer, Bell
+  Printer, Bell, ListOrdered, Download
 } from 'lucide-react';
 
 const PROFILE = { age: 46, vo2max: 70, fcRepos: "35-36", imc: 21, goal: "2h57", paceGoal: "4'12\"/km" };
@@ -357,6 +357,9 @@ export default function MarathonApp() {
           <button onClick={() => setActiveTab('advice')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all ${activeTab === 'advice' ? 'bg-purple-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'}`}>
             <BookOpen className="w-5 h-5" /> Conseils
           </button>
+          <button onClick={() => setActiveTab('sessions')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all ${activeTab === 'sessions' ? 'bg-purple-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'}`}>
+            <ListOrdered className="w-5 h-5" /> Séances
+          </button>
           <button onClick={() => window.print()} title="Imprimer / Exporter en PDF" className="px-4 flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all text-slate-400 hover:bg-slate-800">
             <Printer className="w-5 h-5" />
           </button>
@@ -426,6 +429,52 @@ export default function MarathonApp() {
                 </div>
               </div>
             ))}
+          </section>
+        )}
+
+        {activeTab === 'sessions' && (
+          <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6 print:bg-white print:text-black print:border-slate-300">
+            <div className="flex items-center justify-between mb-6 print:hidden">
+              <h2 className="text-xl font-bold text-white">Récapitulatif — Toutes les Séances</h2>
+              <button onClick={() => window.print()} className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold bg-purple-600 hover:bg-purple-500 text-white transition-all">
+                <Download className="w-4 h-4" /> Exporter en PDF
+              </button>
+            </div>
+            <h2 className="hidden print:block text-xl font-bold mb-4">Récapitulatif — Toutes les Séances</h2>
+            <div className="space-y-2">
+              {TRAINING_DATA.flatMap((week) =>
+                week.days.map((dayData) => ({ week, dayData }))
+              ).map(({ week, dayData }, index) => {
+                const style = getWorkoutStyle(dayData.type);
+                const shoe = getShoeForType(dayData.type, week.week);
+                const isDone = completedDays.includes(dayData.id);
+                return (
+                  <div
+                    key={dayData.id}
+                    className={`flex items-center gap-4 p-3 rounded-xl border print:bg-white print:text-black print:border-slate-300 print:break-inside-avoid ${isDone ? 'opacity-50 border-slate-700 bg-slate-950' : `${style.bg} ${style.border}`}`}
+                  >
+                    <div className="w-8 h-8 shrink-0 flex items-center justify-center font-bold text-xs bg-slate-950/60 print:bg-slate-100 print:text-black rounded-lg">
+                      {index + 1}
+                    </div>
+                    <div className="w-14 shrink-0 text-[11px] text-slate-500 print:text-slate-600 font-semibold">
+                      S{week.week} · {dayData.day.slice(0, 3)}
+                    </div>
+                    <div className="shrink-0">{style.icon}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-white print:text-black text-sm">{dayData.title}</div>
+                      <div className="text-xs text-slate-400 print:text-slate-600">{dayData.desc}</div>
+                    </div>
+                    {shoe && (
+                      <div className={`hidden sm:flex shrink-0 items-center gap-1.5 px-2 py-1 rounded-lg border ${shoe.bg} ${shoe.border} print:hidden`}>
+                        <ShoeIcon className={`w-3.5 h-3.5 ${shoe.text}`} />
+                        <span className={`text-[10px] font-bold ${shoe.text}`}>{shoe.short}</span>
+                      </div>
+                    )}
+                    {isDone && <CheckCircle2 className="text-emerald-500 w-5 h-5 shrink-0 print:hidden" />}
+                  </div>
+                );
+              })}
+            </div>
           </section>
         )}
       </div>
