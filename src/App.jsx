@@ -347,20 +347,20 @@ export default function MarathonApp() {
         </div>
 
         {/* Navigation Section */}
-        <div className="flex gap-2 p-1 bg-slate-900 border border-slate-800 rounded-2xl print:hidden">
-          <button onClick={() => setActiveTab('plan')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all ${activeTab === 'plan' ? 'bg-purple-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'}`}>
-            <Calendar className="w-5 h-5" /> Programme
+        <div className="flex gap-1 sm:gap-2 p-1 bg-slate-900 border border-slate-800 rounded-2xl print:hidden">
+          <button onClick={() => setActiveTab('plan')} className={`flex-1 flex items-center justify-center gap-2 py-3 px-1 rounded-xl font-bold transition-all ${activeTab === 'plan' ? 'bg-purple-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'}`}>
+            <Calendar className="w-5 h-5 shrink-0" /> <span className="hidden sm:inline">Programme</span>
           </button>
-          <button onClick={() => setActiveTab('summary')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all ${activeTab === 'summary' ? 'bg-purple-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'}`}>
-            <BarChart3 className="w-5 h-5" /> Récapitulatif
+          <button onClick={() => setActiveTab('summary')} className={`flex-1 flex items-center justify-center gap-2 py-3 px-1 rounded-xl font-bold transition-all ${activeTab === 'summary' ? 'bg-purple-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'}`}>
+            <BarChart3 className="w-5 h-5 shrink-0" /> <span className="hidden sm:inline">Récapitulatif</span>
           </button>
-          <button onClick={() => setActiveTab('advice')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all ${activeTab === 'advice' ? 'bg-purple-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'}`}>
-            <BookOpen className="w-5 h-5" /> Conseils
+          <button onClick={() => setActiveTab('advice')} className={`flex-1 flex items-center justify-center gap-2 py-3 px-1 rounded-xl font-bold transition-all ${activeTab === 'advice' ? 'bg-purple-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'}`}>
+            <BookOpen className="w-5 h-5 shrink-0" /> <span className="hidden sm:inline">Conseils</span>
           </button>
-          <button onClick={() => setActiveTab('sessions')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all ${activeTab === 'sessions' ? 'bg-purple-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'}`}>
-            <ListOrdered className="w-5 h-5" /> Séances
+          <button onClick={() => setActiveTab('sessions')} className={`flex-1 flex items-center justify-center gap-2 py-3 px-1 rounded-xl font-bold transition-all ${activeTab === 'sessions' ? 'bg-purple-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800'}`}>
+            <ListOrdered className="w-5 h-5 shrink-0" /> <span className="hidden sm:inline">Séances</span>
           </button>
-          <button onClick={() => window.print()} title="Imprimer / Exporter en PDF" className="px-4 flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all text-slate-400 hover:bg-slate-800">
+          <button onClick={() => window.print()} title="Imprimer / Exporter en PDF" className="px-3 shrink-0 flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all text-slate-400 hover:bg-slate-800">
             <Printer className="w-5 h-5" />
           </button>
         </div>
