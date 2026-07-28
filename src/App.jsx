@@ -250,6 +250,18 @@ const isSameDay = (a, b) =>
 
 const RACE_DATE = getDateForDay(TRAINING_DATA[TRAINING_DATA.length - 1], "Dimanche");
 
+const getCurrentWeekIndex = () => {
+  const today = new Date();
+  const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  for (let i = 0; i < TRAINING_DATA.length; i++) {
+    const start = parseStartDate(TRAINING_DATA[i].dates);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 6);
+    if (todayMidnight <= end) return i; // semaine en cours, ou pas encore commencée -> montrer la prochaine
+  }
+  return TRAINING_DATA.length - 1; // après la dernière semaine (course passée)
+};
+
 const getDaysUntilRace = () => {
   const today = new Date();
   const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -283,7 +295,7 @@ const getCompletedKm = (completedDays) =>
   }, 0);
 
 export default function MarathonApp() {
-  const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
+  const [currentWeekIndex, setCurrentWeekIndex] = useState(getCurrentWeekIndex);
   const [completedDays, setCompletedDays] = useState([]);
   const [heatDays, setHeatDays] = useState([]);
   const [activeTab, setActiveTab] = useState('plan');
