@@ -49,36 +49,44 @@ const ShoeIcon = ({ className = "w-5 h-5" }) => (
 
 const SHOES = {
   wave_rider: {
+    id: "wave_rider",
     name: "Mizuno Wave Rider 29",
     short: "Wave Rider 29",
     text: "text-cyan-300",
     bg: "bg-cyan-950/40",
     border: "border-cyan-700",
     solid: "bg-cyan-500",
+    baseKm: 500,
   },
   neo_vista: {
+    id: "neo_vista",
     name: "Mizuno Neo Vista",
     short: "Neo Vista",
     text: "text-fuchsia-300",
     bg: "bg-fuchsia-950/40",
     border: "border-fuchsia-700",
     solid: "bg-fuchsia-500",
+    baseKm: 230,
   },
   endorphine: {
+    id: "endorphine",
     name: "Saucony Endorphin Pro 4",
     short: "Endorphin Pro 4",
     text: "text-orange-300",
     bg: "bg-orange-950/40",
     border: "border-orange-700",
     solid: "bg-orange-500",
+    baseKm: 120,
   },
   endorphine_new: {
+    id: "endorphine_new",
     name: "Saucony Endorphin Pro 4 (neuve)",
     short: "Endorphin Pro 4 (neuve)",
     text: "text-amber-200",
     bg: "bg-amber-900/40",
     border: "border-amber-500",
     solid: "bg-amber-400",
+    baseKm: 0,
   },
 };
 
@@ -107,6 +115,21 @@ const SHOE_LEGEND = [
   { ...SHOES.endorphine, usage: `Allure Marathon (AS42) — Semaines 1 à ${NEW_PAIR_FROM_WEEK - 1}`, types: ["AS42"] },
   { ...SHOES.endorphine_new, usage: `Rodage puis Jour J — à partir de la Semaine ${NEW_PAIR_FROM_WEEK}`, types: ["AS42", "RACE"] },
 ];
+
+const getSessionKm = (dayData) => (dayData.type === "RACE" ? 42.2 : estimateSessionKm(dayData.desc));
+
+const getShoeMileage = (shoeId, completedDays) => {
+  let total = 0;
+  TRAINING_DATA.forEach((week) => {
+    week.days.forEach((day) => {
+      const shoe = getShoeForType(day.type, week.week);
+      if (shoe && shoe.id === shoeId && completedDays.includes(day.id)) {
+        total += getSessionKm(day);
+      }
+    });
+  });
+  return Math.round(total * 10) / 10;
+};
 
 const ExercisePose = ({ pose, className = "w-12 h-12" }) => {
   const s = { fill: "none", stroke: "currentColor", strokeWidth: "3", strokeLinecap: "round", strokeLinejoin: "round" };
@@ -363,6 +386,8 @@ export default function MarathonApp() {
   const [dayLogs, setDayLogs] = useState({});
   const [heatDays, setHeatDays] = useState([]);
   const [activeTab, setActiveTab] = useState('plan');
+  const [showZones, setShowZones] = useState(false);
+  const [showShoes, setShowShoes] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const userId = "julien_nicaise";
@@ -522,8 +547,12 @@ export default function MarathonApp() {
 
         {/* Zones Section */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 print:hidden">
-          <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2"><Info className="w-5 h-5 text-slate-500" /> Allures & Zones de Référence</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+          <button onClick={() => setShowZones((v) => !v)} className="w-full flex items-center justify-between text-left">
+            <h2 className="text-lg font-bold text-white flex items-center gap-2"><Info className="w-5 h-5 text-slate-500" /> Allures & Zones de Référence</h2>
+            <ChevronRight className={`w-5 h-5 text-slate-500 transition-transform ${showZones ? 'rotate-90' : ''}`} />
+          </button>
+          {showZones && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mt-4">
   {ZONES.map((zone, i) => (
     <div key={i} className={`p-4 rounded-xl border ${zone.bg} ${zone.border}`}>
       <h3 className={`font-bold text-xs uppercase mb-1 ${zone.color}`}>{zone.name}</h3>
@@ -532,21 +561,35 @@ export default function MarathonApp() {
     </div>
   ))}
 </div>
+          )}
         </div>
 
         {/* Shoes Section */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 print:hidden">
-          <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-            <ShoeIcon className="w-5 h-5 text-slate-500" /> Mes Chaussures
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-            {SHOE_LEGEND.map((shoe, i) => (
+          <button onClick={() => setShowShoes((v) => !v)} className="w-full flex items-center justify-between text-left">
+            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <ShoeIcon className="w-5 h-5 text-slate-500" /> Mes Chaussures
+            </h2>
+            <ChevronRight className={`w-5 h-5 text-slate-500 transition-transform ${showShoes ? 'rotate-90' : ''}`} />
+          </button>
+          {showShoes && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mt-4">
+            {SHOE_LEGEND.map((shoe, i) => {
+              const sinceP = getShoeMileage(shoe.id, completedDays);
+              const totalKm = Math.round((shoe.baseKm + sinceP) * 10) / 10;
+              return (
               <div key={i} className={`p-4 rounded-xl border ${shoe.bg} ${shoe.border} flex flex-col gap-3`}>
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${shoe.solid}/20`}>
-                    <ShoeIcon className={`w-7 h-7 ${shoe.text}`} />
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`p-2 rounded-lg shrink-0 ${shoe.solid}/20`}>
+                      <ShoeIcon className={`w-7 h-7 ${shoe.text}`} />
+                    </div>
+                    <h3 className="font-bold text-sm text-white leading-tight">{shoe.name}</h3>
                   </div>
-                  <h3 className="font-bold text-sm text-white leading-tight">{shoe.name}</h3>
+                  <div className="text-right shrink-0">
+                    <div className={`text-lg font-black ${shoe.text}`}>{totalKm}<span className="text-xs font-semibold text-slate-500"> km</span></div>
+                    <div className="text-[10px] text-slate-500">+{sinceP} depuis le plan</div>
+                  </div>
                 </div>
                 <p className="text-xs text-slate-400">{shoe.usage}</p>
                 <div className="flex flex-wrap gap-1.5">
@@ -557,8 +600,10 @@ export default function MarathonApp() {
                   ))}
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
+          )}
         </div>
 
         {/* Navigation Section */}
@@ -602,12 +647,14 @@ export default function MarathonApp() {
                 const isHeat = heatDays.includes(dayData.id);
                 const nutrition = getNutritionPlan(dayData, isHeat);
                 const globalIndex = (currentWeek.week - 1) * 7 + i;
+                const sessionKm = getSessionKm(dayData);
                 return (
                   <div key={dayData.id} className={`rounded-xl border p-4 cursor-pointer transition-all print:bg-white print:text-black print:border-slate-300 print:break-inside-avoid ${isDone ? 'opacity-50 border-slate-700' : `${style.bg} ${style.border}`}`} onClick={() => toggleDayCompletion(dayData.id)}>
                     <div className="flex justify-between items-center mb-2">
                       <div className="flex items-center gap-2">
                         <span className="w-6 h-6 shrink-0 flex items-center justify-center rounded-lg bg-slate-950/60 print:bg-slate-100 print:text-black text-[11px] font-bold text-slate-400">{globalIndex + 1}</span>
                         {style.icon}
+                        {sessionKm > 0 && <span className="text-[11px] font-bold text-slate-500">≈{sessionKm} km</span>}
                       </div>
                       <div className="flex items-center gap-1.5 print:hidden">
                         <button onClick={(e) => { e.stopPropagation(); toggleHeatMode(dayData.id); }} title={`Mode Canicule (≥${HEAT_THRESHOLD}°C)`} className={`p-1.5 rounded-lg transition-all ${isHeat ? 'bg-orange-600 text-white' : 'bg-slate-800/60 text-slate-500 hover:text-orange-300'}`}>
