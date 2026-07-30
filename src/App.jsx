@@ -250,6 +250,69 @@ const isSameDay = (a, b) =>
 
 const RACE_DATE = getDateForDay(TRAINING_DATA[TRAINING_DATA.length - 1], "Dimanche");
 
+const BLOCKS = (() => {
+  const groups = [];
+  TRAINING_DATA.forEach((week) => {
+    let g = groups.find((x) => x.label === week.block);
+    if (!g) { g = { label: week.block, weeks: [] }; groups.push(g); }
+    g.weeks.push(week);
+  });
+  return groups;
+})();
+
+const getBlockProgress = (block, completedDays) => {
+  const totalDays = block.weeks.reduce((sum, w) => sum + w.days.length, 0);
+  const doneDays = block.weeks.reduce(
+    (sum, w) => sum + w.days.filter((d) => completedDays.includes(d.id)).length,
+    0
+  );
+  return totalDays ? Math.round((doneDays / totalDays) * 100) : 0;
+};
+
+const getLoggedSeries = (dayLogs, field) => {
+  const points = [];
+  TRAINING_DATA.forEach((week) => {
+    week.days.forEach((day) => {
+      const log = dayLogs[day.id];
+      const raw = log && log[field];
+      if (raw !== undefined && raw !== "" && !isNaN(parseFloat(raw))) {
+        points.push({ id: day.id, label: `S${week.week} ${day.day.slice(0, 3)}`, value: parseFloat(raw) });
+      }
+    });
+  });
+  return points;
+};
+
+const MiniLineChart = ({ points, color = "#38bdf8", unit = "" }) => {
+  if (!points.length) {
+    return <p className="text-xs text-slate-500 italic">Pas encore de données enregistrées.</p>;
+  }
+  const w = 600, h = 160, pad = 32;
+  const values = points.map((p) => p.value);
+  const minV = Math.min(...values);
+  const maxV = Math.max(...values);
+  const range = maxV - minV || 1;
+  const stepX = points.length > 1 ? (w - pad * 2) / (points.length - 1) : 0;
+  const coords = points.map((p, i) => ({
+    x: pad + i * stepX,
+    y: h - pad - ((p.value - minV) / range) * (h - pad * 2),
+  }));
+  const path = coords.map((c) => `${c.x},${c.y}`).join(" ");
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-40">
+      <line x1={pad} y1={h - pad} x2={w - pad} y2={h - pad} stroke="#334155" strokeWidth="1" />
+      <polyline points={path} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      {coords.map((c, i) => (
+        <circle key={points[i].id} cx={c.x} cy={c.y} r="3.5" fill={color} />
+      ))}
+      <text x={pad} y={16} fontSize="11" fill="#94a3b8">{maxV}{unit}</text>
+      <text x={pad} y={h - pad + 16} fontSize="11" fill="#94a3b8">{minV}{unit}</text>
+      <text x={coords[0].x} y={h - 6} fontSize="10" fill="#64748b" textAnchor="start">{points[0].label}</text>
+      <text x={coords[coords.length - 1].x} y={h - 6} fontSize="10" fill="#64748b" textAnchor="end">{points[points.length - 1].label}</text>
+    </svg>
+  );
+};
+
 const getCurrentWeekIndex = () => {
   const today = new Date();
   const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -297,6 +360,7 @@ const getCompletedKm = (completedDays) =>
 export default function MarathonApp() {
   const [currentWeekIndex, setCurrentWeekIndex] = useState(getCurrentWeekIndex);
   const [completedDays, setCompletedDays] = useState([]);
+  const [dayLogs, setDayLogs] = useState({});
   const [heatDays, setHeatDays] = useState([]);
   const [activeTab, setActiveTab] = useState('plan');
   const [loading, setLoading] = useState(true);
@@ -310,6 +374,7 @@ export default function MarathonApp() {
   const unsubscribe = onSnapshot(docRef, (docSnap) => {
     if (docSnap.exists()) {
       setCompletedDays(docSnap.data().days || []);
+      setDayLogs(docSnap.data().logs || {});
     }
     setLoading(false);
   });
@@ -325,9 +390,19 @@ export default function MarathonApp() {
     
     setCompletedDays(updatedDays);
     try {
-      await setDoc(doc(db, "progression", userId), { days: updatedDays });
+      await setDoc(doc(db, "progression", userId), { days: updatedDays }, { merge: true });
     } catch (e) {
       console.error("Erreur sauvegarde:", e);
+    }
+  };
+
+  const updateDayLog = async (id, field, value) => {
+    const updatedLogs = { ...dayLogs, [id]: { ...dayLogs[id], [field]: value } };
+    setDayLogs(updatedLogs);
+    try {
+      await setDoc(doc(db, "progression", userId), { logs: updatedLogs }, { merge: true });
+    } catch (e) {
+      console.error("Erreur sauvegarde log:", e);
     }
   };
 
@@ -405,16 +480,43 @@ export default function MarathonApp() {
           <div className="mt-2 w-full bg-slate-800 h-2 rounded-full overflow-hidden print:hidden">
              <div className="h-full bg-sky-500 transition-all duration-500" style={{ width: `${kmPercent}%` }}></div>
           </div>
+          <div className="mt-5 grid grid-cols-2 md:grid-cols-4 gap-3 print:hidden">
+            {BLOCKS.map((block, i) => {
+              const pct = getBlockProgress(block, completedDays);
+              const isCurrent = currentWeek.block === block.label;
+              return (
+                <div key={i} className={`rounded-lg p-2.5 border ${isCurrent ? 'border-purple-500 bg-purple-950/30' : 'border-slate-800 bg-slate-950/40'}`}>
+                  <div className="flex items-baseline justify-between mb-1.5">
+                    <span className={`text-[11px] font-bold ${isCurrent ? 'text-purple-300' : 'text-slate-500'}`}>Bloc {i + 1}</span>
+                    <span className="text-[10px] text-slate-500">{pct}%</span>
+                  </div>
+                  <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                    <div className={`h-full transition-all duration-500 ${isCurrent ? 'bg-purple-500' : 'bg-slate-600'}`} style={{ width: `${pct}%` }}></div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </header>
 
-        {/* Today's session reminder */}
-        {todaySession && todaySession.day.type !== "Repos" && !completedDays.includes(todaySession.day.id) && (
-          <div className="bg-purple-600/20 border border-purple-500 rounded-2xl p-4 flex items-center gap-3 print:hidden">
-            <Bell className="w-5 h-5 text-purple-300 shrink-0" />
-            <div className="flex-1">
-              <p className="text-sm text-purple-200 font-semibold">Séance d'aujourd'hui : {todaySession.day.title}</p>
-              <p className="text-xs text-slate-400">{todaySession.day.desc}</p>
+        {/* Today's session — toujours épinglée, peu importe la semaine affichée */}
+        {todaySession && (
+          <div
+            onClick={() => setCurrentWeekIndex(TRAINING_DATA.findIndex((w) => w.week === todaySession.week.week))}
+            className={`rounded-2xl p-4 flex items-center gap-3 print:hidden cursor-pointer transition-all ${completedDays.includes(todaySession.day.id) ? 'bg-emerald-600/10 border border-emerald-800' : 'bg-purple-600/20 border border-purple-500'}`}
+          >
+            {completedDays.includes(todaySession.day.id) ? (
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+            ) : (
+              <Bell className="w-5 h-5 text-purple-300 shrink-0" />
+            )}
+            <div className="flex-1 min-w-0">
+              <p className={`text-sm font-semibold ${completedDays.includes(todaySession.day.id) ? 'text-emerald-300' : 'text-purple-200'}`}>
+                Aujourd'hui (S{todaySession.week.week}) : {todaySession.day.title}
+              </p>
+              <p className="text-xs text-slate-400 truncate">{todaySession.day.desc}</p>
             </div>
+            <ChevronRight className="w-5 h-5 text-slate-600 shrink-0" />
           </div>
         )}
 
@@ -493,16 +595,20 @@ export default function MarathonApp() {
               <button onClick={() => setCurrentWeekIndex(p => Math.min(11, p+1))} disabled={currentWeekIndex === 11} className="p-2 rounded-lg hover:bg-slate-800 disabled:opacity-30 print:hidden"><ChevronRight className="w-6 h-6" /></button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {currentWeek.days.map((dayData) => {
+              {currentWeek.days.map((dayData, i) => {
                 const style = getWorkoutStyle(dayData.type);
                 const shoe = getShoeForType(dayData.type, currentWeek.week);
                 const isDone = completedDays.includes(dayData.id);
                 const isHeat = heatDays.includes(dayData.id);
                 const nutrition = getNutritionPlan(dayData, isHeat);
+                const globalIndex = (currentWeek.week - 1) * 7 + i;
                 return (
                   <div key={dayData.id} className={`rounded-xl border p-4 cursor-pointer transition-all print:bg-white print:text-black print:border-slate-300 print:break-inside-avoid ${isDone ? 'opacity-50 border-slate-700' : `${style.bg} ${style.border}`}`} onClick={() => toggleDayCompletion(dayData.id)}>
                     <div className="flex justify-between items-center mb-2">
-                      {style.icon}
+                      <div className="flex items-center gap-2">
+                        <span className="w-6 h-6 shrink-0 flex items-center justify-center rounded-lg bg-slate-950/60 print:bg-slate-100 print:text-black text-[11px] font-bold text-slate-400">{globalIndex + 1}</span>
+                        {style.icon}
+                      </div>
                       <div className="flex items-center gap-1.5 print:hidden">
                         <button onClick={(e) => { e.stopPropagation(); toggleHeatMode(dayData.id); }} title={`Mode Canicule (≥${HEAT_THRESHOLD}°C)`} className={`p-1.5 rounded-lg transition-all ${isHeat ? 'bg-orange-600 text-white' : 'bg-slate-800/60 text-slate-500 hover:text-orange-300'}`}>
                           <Thermometer className="w-4 h-4" />
@@ -549,6 +655,28 @@ export default function MarathonApp() {
                         </ul>
                       </div>
                     )}
+                    <div className="mt-3 flex items-center gap-3 print:hidden" onClick={(e) => e.stopPropagation()}>
+                      <label className="flex items-center gap-1.5 text-[11px] text-slate-500">
+                        Poids
+                        <input
+                          type="number" step="0.1" inputMode="decimal" placeholder="kg"
+                          value={dayLogs[dayData.id]?.weight ?? ''}
+                          onChange={(e) => updateDayLog(dayData.id, 'weight', e.target.value)}
+                          className="w-16 bg-slate-950/60 border border-slate-800 rounded-md px-1.5 py-1 text-slate-200 text-[11px] focus:outline-none focus:border-purple-500"
+                        />
+                        kg
+                      </label>
+                      <label className="flex items-center gap-1.5 text-[11px] text-slate-500">
+                        RPE
+                        <input
+                          type="number" min="1" max="10" inputMode="numeric" placeholder="/10"
+                          value={dayLogs[dayData.id]?.rpe ?? ''}
+                          onChange={(e) => updateDayLog(dayData.id, 'rpe', e.target.value)}
+                          className="w-14 bg-slate-950/60 border border-slate-800 rounded-md px-1.5 py-1 text-slate-200 text-[11px] focus:outline-none focus:border-purple-500"
+                        />
+                        /10
+                      </label>
+                    </div>
                   </div>
                 );
               })}
@@ -571,6 +699,25 @@ export default function MarathonApp() {
                   <div className="font-bold text-purple-400 w-16 text-right">{week.volume_km} km</div>
                 </div>
               ))}
+            </div>
+          </section>
+        )}
+
+        {activeTab === 'summary' && (
+          <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
+            <div>
+              <h2 className="text-xl font-bold text-white mb-1">Suivi de Forme</h2>
+              <p className="text-xs text-slate-500 mb-4">Repérer une fatigue qui s'accumule avant qu'elle ne devienne une blessure — regarde surtout les tendances, pas les valeurs isolées.</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-300 mb-2">Poids (kg)</h3>
+                  <MiniLineChart points={getLoggedSeries(dayLogs, 'weight')} color="#38bdf8" unit="kg" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-300 mb-2">RPE (ressenti d'effort /10)</h3>
+                  <MiniLineChart points={getLoggedSeries(dayLogs, 'rpe')} color="#fb7185" unit="" />
+                </div>
+              </div>
             </div>
           </section>
         )}
