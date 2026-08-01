@@ -276,8 +276,9 @@ const RACE_DATE = getDateForDay(TRAINING_DATA[TRAINING_DATA.length - 1], "Dimanc
 const BLOCKS = (() => {
   const groups = [];
   TRAINING_DATA.forEach((week) => {
-    let g = groups.find((x) => x.label === week.block);
-    if (!g) { g = { label: week.block, weeks: [] }; groups.push(g); }
+    const num = (week.block.match(/Bloc (\d+)/) || [, "?"])[1];
+    let g = groups.find((x) => x.num === num);
+    if (!g) { g = { num, label: `Bloc ${num}`, weeks: [] }; groups.push(g); }
     g.weeks.push(week);
   });
   return groups;
@@ -508,7 +509,7 @@ export default function MarathonApp() {
           <div className="mt-5 grid grid-cols-2 md:grid-cols-4 gap-3 print:hidden">
             {BLOCKS.map((block, i) => {
               const pct = getBlockProgress(block, completedDays);
-              const isCurrent = currentWeek.block === block.label;
+              const isCurrent = currentWeek.block.includes(block.label);
               return (
                 <div key={i} className={`rounded-lg p-2.5 border ${isCurrent ? 'border-purple-500 bg-purple-950/30' : 'border-slate-800 bg-slate-950/40'}`}>
                   <div className="flex items-baseline justify-between mb-1.5">
