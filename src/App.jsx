@@ -542,7 +542,6 @@ export default function MarathonApp() {
               </p>
               <p className="text-xs text-slate-400 truncate">{todaySession.day.desc}</p>
             </div>
-            <ChevronRight className="w-5 h-5 text-slate-600 shrink-0" />
           </div>
         )}
 
