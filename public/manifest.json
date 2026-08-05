@@ -1,0 +1,14 @@
+{
+  "name": "Marathon de Bruges",
+  "short_name": "MarathonBruges",
+  "description": "Suivi d'entraînement pour le Marathon de Bruges",
+  "start_url": "/marathon-bruges/",
+  "scope": "/marathon-bruges/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#7c3aed",
+  "icons": [
+    { "src": "/marathon-bruges/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/marathon-bruges/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

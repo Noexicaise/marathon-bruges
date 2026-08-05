@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { db } from './firebase';
 import { doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
 import { 
@@ -389,6 +389,17 @@ export default function MarathonApp() {
   const [activeTab, setActiveTab] = useState('plan');
   const [showZones, setShowZones] = useState(false);
   const [showShoes, setShowShoes] = useState(false);
+  const touchStartX = useRef(null);
+  const handleWeekTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; };
+  const handleWeekTouchEnd = (e) => {
+    if (touchStartX.current === null) return;
+    const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(deltaX) > 60) {
+      if (deltaX < 0) setCurrentWeekIndex((p) => Math.min(TRAINING_DATA.length - 1, p + 1));
+      else setCurrentWeekIndex((p) => Math.max(0, p - 1));
+    }
+    touchStartX.current = null;
+  };
   const [loading, setLoading] = useState(true);
 
   const userId = "julien_nicaise";
@@ -459,7 +470,27 @@ export default function MarathonApp() {
   }, []);
 
   if (loading) {
-    return <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">Chargement...</div>;
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-200 font-sans p-4 md:p-8">
+        <div className="max-w-5xl mx-auto space-y-6 animate-pulse">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+            <div className="h-8 w-2/3 bg-slate-800 rounded-lg mb-3"></div>
+            <div className="h-4 w-1/3 bg-slate-800 rounded-lg mb-2"></div>
+            <div className="h-3 w-1/4 bg-slate-800 rounded-lg mb-5"></div>
+            <div className="h-2 w-full bg-slate-800 rounded-full mb-2"></div>
+            <div className="h-2 w-full bg-slate-800 rounded-full mb-5"></div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {[0, 1, 2, 3].map((i) => <div key={i} className="h-14 bg-slate-800/60 rounded-lg"></div>)}
+            </div>
+          </div>
+          <div className="h-16 bg-slate-900 border border-slate-800 rounded-2xl"></div>
+          <div className="h-14 bg-slate-900 border border-slate-800 rounded-2xl"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[0, 1, 2, 3, 4, 5, 6].map((i) => <div key={i} className="h-40 bg-slate-900 border border-slate-800 rounded-xl"></div>)}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const currentWeek = TRAINING_DATA[currentWeekIndex];
@@ -630,7 +661,7 @@ export default function MarathonApp() {
 
         {/* Tabs Content */}
         {activeTab === 'plan' && (
-          <section className="space-y-4">
+          <section className="space-y-4" onTouchStart={handleWeekTouchStart} onTouchEnd={handleWeekTouchEnd}>
             <div className="flex items-center justify-between bg-slate-900 border border-slate-800 rounded-2xl p-4 print:bg-white print:text-black print:border-slate-300">
               <button onClick={() => setCurrentWeekIndex(p => Math.max(0, p-1))} disabled={currentWeekIndex === 0} className="p-2 rounded-lg hover:bg-slate-800 disabled:opacity-30 print:hidden"><ChevronLeft className="w-6 h-6" /></button>
               <div className="text-center">
@@ -723,6 +754,14 @@ export default function MarathonApp() {
                         />
                         /10
                       </label>
+                    </div>
+                    <div className="mt-2 print:hidden" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="text" placeholder="Note (douleur, ressenti, météo...)"
+                        value={dayLogs[dayData.id]?.notes ?? ''}
+                        onChange={(e) => updateDayLog(dayData.id, 'notes', e.target.value)}
+                        className="w-full bg-slate-950/60 border border-slate-800 rounded-md px-2 py-1.5 text-slate-200 text-[11px] focus:outline-none focus:border-purple-500 placeholder:text-slate-600"
+                      />
                     </div>
                   </div>
                 );
